@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Ajiva.PasswordManager.Ui.Maui.MainPage"
+    xmlns:m="clr-namespace:Ajiva.PasswordManager.Ui.Maui.ViewModels"
+    xmlns:v="clr-namespace:Ajiva.PasswordManager.Ui.Maui.Views"
+    xmlns:p="clr-namespace:Ajiva.PasswordManager.Ui.Maui.Pages">
+
+    <Grid>
+        <Grid RowSpacing="45" RowDefinitions="Auto, Auto, Auto" VerticalOptions="Center" HorizontalOptions="Center"
+            Padding="{OnPlatform iOS='30,60,30,30', Default='30'}">
+
+            <Label 
+                Text="Unlock Passowrd Vault"
+                Grid.Row="0"
+                SemanticProperties.HeadingLevel="Level1"
+                FontSize="Header"
+                HorizontalOptions="Center" />
+
+            <!-- get passowrd input -->
+            <Entry
+                Grid.Row="1"
+                Placeholder="Enter Password"
+                x:Name="PasswordInput"
+                IsPassword="False"
+                FontSize="Header"
+                MaxLength="64"
+                HorizontalTextAlignment="Center"
+                MaximumWidthRequest="600"/>
+
+
+            <Button 
+                Text="Unlock"
+                FontAttributes="Bold"
+                FontSize="Header" 
+                Grid.Row="3"
+                SemanticProperties.Hint="Counts the number of times you click"
+                Clicked="OnUnlockClicked"
+                HorizontalOptions="Center" />
+        </Grid>
+    </Grid>
+</ContentPage>
