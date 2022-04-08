@@ -40,7 +40,7 @@
 
             <!-- Desktop/Tablet-->
             <FlyoutItem Title="Home" Icon="tab_home.png">
-                <ShellContent ContentTemplate="{DataTemplate page:PasswordPage}"/>
+                <ShellContent ContentTemplate="{DataTemplate page:PasswordPageBased}"/>
             </FlyoutItem>
             <FlyoutItem Title="Favorites" Icon="tab_favorites.png">
                 <ShellContent ContentTemplate="{DataTemplate page:TwoFactorPage}"/>
