@@ -4,6 +4,11 @@ namespace Ajiva.PasswordManager.Ui.Maui.ViewModels;
 
 public class PasswordVm
 {
+
+    public PasswordVm()
+    {
+
+    }
     public PasswordVm(PasswordEntry argValue, Vault vault)
     {
         Id = argValue.Id;
@@ -70,6 +75,10 @@ public class IdentityVm
 }
 public class WebSideVm
 {
+    public WebSideVm()
+    {
+
+    }
     public WebSideVm(WebSideEntry webSide)
     {
         Id = webSide.Id;
@@ -110,6 +119,10 @@ public class FileNoteVm
 }
 public class TagVm
 {
+    public TagVm()
+    {
+
+    }
     public TagVm(TagEntry tagEntry)
     {
         Id = tagEntry.Id;

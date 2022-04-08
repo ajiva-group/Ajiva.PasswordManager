@@ -1,22 +1,34 @@
 using Ajiva.PasswordManager.Ui.Maui.Static;
 using Ajiva.PasswordManager.Ui.Maui.ViewModels;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
 using VaultManager;
 
 namespace Ajiva.PasswordManager.Ui.Maui.Pages;
 
 public partial class PasswordPage : ContentPage
 {
-
+    private readonly PasswordViewModel _vm;
 
     public PasswordPage()
     {
-        BindingContext = new PasswordViewModel();
-
+        _vm = new PasswordViewModel();
+        BindingContext = _vm;
         InitializeComponent();
     }
 
     private void Save_Clicked(object sender, EventArgs e)
     {
         StaticData.Vault.SaveVault();
+    }
+
+    private void SearchBar_SearchButtonPressed(object sender, EventArgs e)
+    {
+        _vm.Search(PwSearch.Text);
+    }
+
+    private void PwCollectionView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        Deteils.Current = e.CurrentSelection.First() as PasswordVm;
     }
 }
