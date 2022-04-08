@@ -33,6 +33,25 @@ internal class MauiStorageProvider : IStorageProvider
     }
 
     /// <inheritdoc />
+    public string ReadAllText(string path)
+    {
+        try
+        {
+            var file = _storeStorage.OpenFile(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+            var reader = new StreamReader(file);
+            var text = reader.ReadToEnd();
+            file.Close();
+            return text;
+        }
+        catch (IsolatedStorageException e)
+        {
+            if (e.InnerException is FileNotFoundException)
+                throw new VaultNotFound(path);
+            throw;
+        }
+    }
+
+    /// <inheritdoc />
     public void CreateDirectory(string path)
     {
         _storeStorage.CreateDirectory(path);
@@ -47,5 +66,17 @@ internal class MauiStorageProvider : IStorageProvider
 
         file.Write(data);
         file.Close();
+    }
+
+    /// <inheritdoc />
+    public void WriteAllText(string path, string data)
+    {
+        var file = _storeStorage.FileExists(path)
+            ? _storeStorage.OpenFile(path, FileMode.Truncate)
+            : _storeStorage.OpenFile(path, FileMode.CreateNew);
+
+        var writer = new StreamWriter(file);
+        writer.Write(data);
+        writer.Close();
     }
 }

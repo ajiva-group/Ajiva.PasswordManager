@@ -1,118 +1,123 @@
 ﻿using System.Security.Cryptography;
+using System.Text;
 using VaultManager.Providers;
 
 namespace VaultManager.Crypto;
 
 public class EncryptionManager : IEncryptionProvider
 {
-    private byte[] StaticIV = new byte[16] { 0x12, 0x34, 0x56, 0x78, 0x90, 0xAB, 0xCD, 0xEF, 0x15, 0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7 };
-    private byte[] StaticIV2 = new byte[16] { 0xF2, 0xD2, 0xB2, 0x92, 0x72, 0x52, 0x32, 0x12, 0xA4, 0x6C, 0x4C, 0x22, 0x0C, 0x8A, 0x6C, 0x4C };
+    //private byte[] StaticIV = new byte[16] { 0x12, 0x34, 0x56, 0x78, 0x90, 0xAB, 0xCD, 0xEF, 0x15, 0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7 };
+    //private byte[] StaticIV2 = new byte[16] { 0xF2, 0xD2, 0xB2, 0x92, 0x72, 0x52, 0x32, 0x12, 0xA4, 0x6C, 0x4C, 0x22, 0x0C, 0x8A, 0x6C, 0x4C };
+    //private RSA  _rsa;
+    private Aes _aes;
 
-    /// <summary>
-    /// Encrypt Using RSA
-    /// </summary>
-    /// <param name="encrypted"></param>
-    /// <param name="key"></param>
-    /// <returns></returns>
-    public byte[] Decrypt(byte[] encrypted, byte[] key)
+    public EncryptionManager()
     {
-        using var rsa = new RSACryptoServiceProvider();
-
-        rsa.ImportCspBlob(key);
-        return rsa.Decrypt(encrypted, false);
-    }
-
-    /// <summary>
-    /// Encrypt Using RSA
-    /// </summary>
-    /// <param name="data"></param>
-    /// <param name="key"></param>
-    /// <returns></returns>
-    public byte[] Encrypt(byte[] data, byte[] key)
-    {
-        using var rsa = new RSACryptoServiceProvider();
-        rsa.ImportCspBlob(key);
-
-        return rsa.Encrypt(data, false);
-    }
-
-    /// <summary>
-    /// Generate Random RSA Key
-    /// </summary>
-    /// <returns></returns>
-    public byte[] GenerateKey()
-    {
-        using var rsa = CreateRsa();
-        return rsa.ExportCspBlob(true);
-    }
-
-    private RSACryptoServiceProvider CreateRsa() => new RSACryptoServiceProvider(8192);
-
-    /// <inheritdoc />
-    public byte[] DecryptSymmetric(byte[] encrypted, byte[] key)
-    {
-        using var aes = Aes.Create();
-        aes.Key = key;
-
-        return aes.DecryptCfb(encrypted, StaticIV);
+        Clear();
     }
 
     /// <inheritdoc />
-    public byte[] EncryptSymmetric(byte[] data, byte[] key)
+    public byte[] DecryptSymmetric(byte[] encrypted)
     {
-        using var aes = Aes.Create();
-        aes.Key = key;
+        using var decryptor = _aes.CreateDecryptor();
+        using var ms = new MemoryStream();
+        using var cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Write);
 
-        return aes.EncryptCfb(data, StaticIV);
+        cs.Write(encrypted, 0, encrypted.Length);
+        cs.FlushFinalBlock();
+
+        return ms.ToArray();
     }
 
     /// <inheritdoc />
-    public byte[] GenerateSymmetricKey(string salt)
+    public byte[] EncryptSymmetric(byte[] data)
     {
-        var pwdGen = new Rfc2898DeriveBytes(salt, StaticIV2, 8192, HashAlgorithmName.SHA256);
-        return pwdGen.GetBytes(32);
+        using var encryptor = _aes.CreateEncryptor();
+        using var ms = new MemoryStream();
+        using var cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write);
+
+        cs.Write(data, 0, data.Length);
+        cs.FlushFinalBlock();
+
+        return ms.ToArray();
+    }
+
+    /*
+    /// <inheritdoc />
+    public byte[] DecryptAsymmetric(byte[] encrypted)
+    {
+        return _rsa.Decrypt(encrypted, RSAEncryptionPadding.Pkcs1);
     }
 
     /// <inheritdoc />
-    public byte[] DecryptAsymmetric(byte[] encrypted, byte[] blob)
+    public byte[] EncryptAsymmetric(byte[] data)
     {
-        using var rsa = new RSACryptoServiceProvider();
-        rsa.ImportCspBlob(blob);
-
-        return rsa.Decrypt(encrypted, false);
+        return _rsa.Encrypt(data, RSAEncryptionPadding.Pkcs1);
     }
 
     /// <inheritdoc />
-    public byte[] EncryptAsymmetric(byte[] data, byte[] blob)
+    public byte[] SingAsymmetric(byte[] data)
     {
-        using var rsa = new RSACryptoServiceProvider();
-        rsa.ImportCspBlob(blob);
-
-        return rsa.Encrypt(data, false);
+        return _rsa.SignData(data, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
     }
 
     /// <inheritdoc />
-    public byte[] GenerateAsymmetricKey()
+    public bool VerifyAsymmetric(byte[] data, byte[] signature)
     {
-        using var rsa = new RSACryptoServiceProvider(8192);
-        return rsa.ExportCspBlob(true);
+        return _rsa.VerifyData(data, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
     }
 
     /// <inheritdoc />
-    public byte[] SingAsymmetric(byte[] data, byte[] blob)
+    public void LoadAsymmetricKey(ReadOnlySpan<char> passwordBytes, ReadOnlySpan<char> source)
     {
-        using var rsa = new RSACryptoServiceProvider();
-        rsa.ImportCspBlob(blob);
-
-        return rsa.SignData(data, HashAlgorithmName.SHA512, RSASignaturePadding.Pkcs1);
+        _rsa.ImportFromEncryptedPem(source, passwordBytes);
     }
 
     /// <inheritdoc />
-    public bool VerifyAsymmetric(byte[] data, byte[] blob, byte[] signature)
+    public ReadOnlySpan<byte> ExportAsymmetricKey(ReadOnlySpan<char> passwordBytes)
     {
-        using var rsa = new RSACryptoServiceProvider();
-        rsa.ImportCspBlob(blob);
+        var crypto = new RSACryptoServiceProvider();
+        crypto.ImportParameters(_rsa.ExportParameters(true));
 
-        return rsa.VerifyData(data, signature, HashAlgorithmName.SHA512, RSASignaturePadding.Pkcs1);
+        var key = crypto.ExportCspBlob(true);
+        
+        
+        ECDsa ecDsa = ECDsa.Create();
+        ecDsa.ExportEncryptedPkcs8PrivateKey()
+    }
+    */
+
+    /// <inheritdoc />
+    public byte[] ExportSymmetricKey()
+    {
+        var joint = new byte[AES_KEY_SIZE + AES_IV_SIZE];
+        _aes.Key.CopyTo(joint, 0);
+        _aes.IV.CopyTo(joint, AES_KEY_SIZE);
+        //return _rsa.Encrypt(joint, RSAEncryptionPadding.OaepSHA512);
+        return joint;
+    }
+
+    /// <inheritdoc />
+    public void Clear()
+    {
+        //_rsa?.Dispose();
+        _aes?.Dispose();
+        _aes = Aes.Create();
+        _aes.KeySize = AES_KEY_SIZE_BIT;
+        _aes.GenerateKey();
+        _aes.GenerateIV();
+        //_rsa = RSA.Create();
+    }
+
+    public const int AES_KEY_SIZE_BIT = 256;
+    public const int AES_KEY_SIZE = AES_KEY_SIZE_BIT / 8;
+    public const int AES_IV_SIZE = AES_KEY_SIZE / 2;
+
+    /// <inheritdoc />
+    public void LoadSymmetricKey(byte[] data)
+    {
+        var joint = data;//_rsa.Decrypt(data, RSAEncryptionPadding.OaepSHA512);
+        _aes.Key = joint.AsSpan(0, AES_KEY_SIZE).ToArray();
+        _aes.IV = joint.AsSpan(AES_KEY_SIZE).ToArray();
     }
 }

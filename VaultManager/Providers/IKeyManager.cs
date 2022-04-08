@@ -1,8 +1,14 @@
-﻿namespace VaultManager.Providers;
+﻿using System.Security.Cryptography;
+
+namespace VaultManager.Providers;
 
 public interface IKeyManager
 {
-    byte[] LoadKey();
-    void SaveKey(byte[] key);
+    /*void LoadRsaKey();
+    void SaveRsaKey();*/
+    void LoadAesKey();
+    void SaveAesKey();
     void CreateKey();
+    void LoadKeys();
+    void SaveKeysAndClear();
 }

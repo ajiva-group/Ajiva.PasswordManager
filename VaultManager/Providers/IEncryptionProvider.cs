@@ -1,19 +1,21 @@
-﻿namespace VaultManager.Providers;
+﻿using System.Threading.Channels;
+
+namespace VaultManager.Providers;
 
 public interface IEncryptionProvider
 {
-    byte[] DecryptSymmetric(byte[] encrypted, byte[] key);
+    byte[] DecryptSymmetric(byte[] encrypted);
 
-    byte[] EncryptSymmetric(byte[] data, byte[] key);
+    byte[] EncryptSymmetric(byte[] data);
 
-    byte[] GenerateSymmetricKey(string salt);
+    /*byte[] DecryptAsymmetric(byte[] encrypted);
 
-    byte[] DecryptAsymmetric(byte[] encrypted, byte[] blob);
-
-    byte[] EncryptAsymmetric(byte[] data, byte[] blob);
-
-    byte[] GenerateAsymmetricKey();
-
-    byte[] SingAsymmetric(byte[] data, byte[] blob);
-    bool VerifyAsymmetric(byte[] data, byte[] blob, byte[] signature);
+    byte[] EncryptAsymmetric(byte[] data);
+    byte[] SingAsymmetric(byte[] data);
+    bool VerifyAsymmetric(byte[] data, byte[] signature);
+    void LoadAsymmetricKey(ReadOnlySpan<char> passwordBytes, ReadOnlySpan<char> source);
+    ReadOnlySpan<char> ExportAsymmetricKey(ReadOnlySpan<char> passwordBytes);*/
+    public void LoadSymmetricKey(byte[] data);
+    public byte[] ExportSymmetricKey();
+    void Clear();
 }

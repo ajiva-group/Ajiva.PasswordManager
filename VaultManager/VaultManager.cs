@@ -31,33 +31,40 @@ public class VaultManager
     {
         EnsureDirectoryExist();
         var encData = _storageProvider.ReadAllBytes(_vaultFile);
-        var key = _keyManager.LoadKey();
-        var data = _encryptionProvider.DecryptAsymmetric(encData, key);
+        _keyManager.LoadKeys();
+        var data = _encryptionProvider.DecryptSymmetric(encData);
         Vault = _serializationManager.DeserializeVault(data);
+        _keyManager.SaveKeysAndClear();
 
-        Vault.Passwords.Add(Guid.Parse("1E100D0E-BE75-46B7-95D6-EA9FB724E8B7"), new PasswordEntry()
+        while (Vault.Passwords.Count < 10)
         {
-            Description = "Test Description",
-            Password = "Test Password",
-            Username = "Test Username",
-            Notes = "Test Notes",
-            Id = Guid.Parse("1E100D0E-BE75-46B7-95D6-EA9FB724E8B7"),
-            WebSide = new WebSideEntry
+            var id = Guid.NewGuid();
+            Vault.Passwords.Add(id, new PasswordEntry
             {
-                Description = "Test Description Webside",
-                Domain = new Uri("https://www.google.com"),
-                Id = Guid.Parse("1E100D0E-BE75-46B7-95D6-EA9FB724E8B7"),
-                Settings = new WebSideSettings { },
-            }
-        });
+                Description = "Test Description " + id,
+                Password = "PW" + id,
+                Username = "Test Username",
+                Notes = "Test Notes",
+                Id = id,
+                WebSide = new WebSideEntry
+                {
+                    Description = "Test Description WebSide for " + id,
+                    Domain = new Uri("https://www.google.com"),
+                    Id = Guid.NewGuid(),
+                    Settings = new WebSideSettings { },
+                }
+            });
+        }
+        SaveVault();
     }
 
     public void SaveVault()
     {
         var data = _serializationManager.SerializeVault(Vault);
-        var key = _keyManager.LoadKey();
-        var encData = _encryptionProvider.EncryptAsymmetric(data, key);
+        _keyManager.LoadKeys();
+        var encData = _encryptionProvider.EncryptSymmetric(data);
         _storageProvider.WriteAllBytes(_vaultFile, encData);
+        _keyManager.SaveKeysAndClear();
     }
 
     public Vault Vault { get; private set; }
