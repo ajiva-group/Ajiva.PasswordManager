@@ -10,16 +10,19 @@ public partial class PasswordPage : ContentPage
 {
     private readonly PasswordViewModel _vm;
 
-    public PasswordPage()
+    public IVaultService VaultService { get; }
+
+    public PasswordPage(IVaultService vaultService)
     {
-        _vm = new PasswordViewModel();
+        _vm = new PasswordViewModel(vaultService);
         BindingContext = _vm;
         InitializeComponent();
+        VaultService = vaultService;
     }
 
     private void Save_Clicked(object sender, EventArgs e)
     {
-        StaticData.Vault.SaveVault();
+        VaultService.Vault.SaveVault();
     }
 
     private void SearchBar_SearchButtonPressed(object sender, EventArgs e)

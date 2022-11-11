@@ -6,79 +6,43 @@ namespace VaultManager.Crypto;
 
 public class KeyManager : IKeyManager
 {
-    private IEncryptionProvider _encryptionProvider;
     private IStorageProvider _storageProvider;
-    private readonly string _password;
-    private readonly string _keyRsaPath;
-    private readonly string _keyAesPath;
+    private readonly IVaultConfig _vaultConfig;
 
-    public string KeyDir { get; set; } = "Keys";
-
-    public KeyManager(IEncryptionProvider encryptionProvider, IStorageProvider storageProvider, string keyName, string password)
+    public KeyManager(IStorageProvider storageProvider, IVaultConfig vaultConfig)
     {
-        _encryptionProvider = encryptionProvider;
         _storageProvider = storageProvider;
-        _password = password;
-        _keyRsaPath = Path.Combine(KeyDir, keyName + ".rsa.key");
-        _keyAesPath = Path.Combine(KeyDir, keyName + ".aes.key");
-    }
-
-    private void EnsureDirectoryExist()
-    {
-        _storageProvider.CreateDirectory(KeyDir);
-    }
-
-    /*
-    /// <inheritdoc />
-    public void LoadRsaKey()
-    {
-        var source = _storageProvider.ReadAllText(_keyRsaPath);
-        _encryptionProvider.LoadAsymmetricKey(_password, source);
+        _vaultConfig = vaultConfig;
+        _storageProvider.CreateDirectory(_vaultConfig.KeyDir);
     }
 
     /// <inheritdoc />
-    public void SaveRsaKey()
+    public VaultKey CreateKey(string name)
     {
-        var rsaBytes = _encryptionProvider.ExportAsymmetricKey(_password);
-        _storageProvider.WriteAllBytes(_keyRsaPath, rsaBytes);
-    }
-    */
-
-    /// <inheritdoc />
-    public void LoadAesKey()
-    {
-        var data = _storageProvider.ReadAllBytes(_keyAesPath);
-        _encryptionProvider.LoadSymmetricKey(data);
+        var key = new VaultKey(VaultKey.GenerateRandomBlob(), name);
+        SaveKey(key);
+        return key;
     }
 
     /// <inheritdoc />
-    public void SaveAesKey()
+    public VaultKey LoadKey(string name)
     {
-        var aes = _encryptionProvider.ExportSymmetricKey();
-        _storageProvider.WriteAllBytes(_keyAesPath, aes);
+        return new VaultKey(
+            _storageProvider.ReadAllBytes(
+                GetKeyFile(name)
+            ),
+            name
+        );
     }
 
-    /// <inheritdoc />
-    public void CreateKey()
-    {
-        SaveKeysAndClear();
-        LoadKeys();
-    }
+    private string GetKeyFile(string name) => $"{_vaultConfig.KeyDir}/{name}.key";
 
     /// <inheritdoc />
-    public void LoadKeys()
+    public void SaveKey(VaultKey key)
     {
-        EnsureDirectoryExist();
-        //LoadRsaKey();
-        LoadAesKey();
-    }
-
-    /// <inheritdoc />
-    public void SaveKeysAndClear()
-    {
-        EnsureDirectoryExist();
-        //SaveRsaKey();
-        SaveAesKey();
-        _encryptionProvider.Clear();
+        _storageProvider.WriteAllBytes(
+            GetKeyFile(key.Name),
+            key.ExportKeyBlob()
+        );
     }
 }

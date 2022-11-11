@@ -11,6 +11,7 @@ public class PasswordViewModel : INotifyPropertyChanged
 {
     public ObservableCollection<PasswordVm> Passwords { get; set; } = new ObservableCollection<PasswordVm>();
     public List<PasswordVm> AllPasswords { get; set; } = new List<PasswordVm>();
+    public IVaultService VaultService { get; }
 
     void Fetch()
     {
@@ -19,7 +20,7 @@ public class PasswordViewModel : INotifyPropertyChanged
 
     private void GetPasswords()
     {
-        var vault = StaticData.Vault.Vault;
+        var vault = VaultService.Vault.Vault;
         AllPasswords = vault.Passwords.Select(x => new PasswordVm(x.Value, vault)).ToList();
     }
 
@@ -62,9 +63,10 @@ public class PasswordViewModel : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 
-    public PasswordViewModel()
+    public PasswordViewModel(IVaultService vaultService)
     {
         Fetch();
         Search(null);
+        VaultService = vaultService;
     }
 }

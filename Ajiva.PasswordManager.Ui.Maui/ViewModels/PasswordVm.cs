@@ -25,7 +25,6 @@ public class PasswordVm
     public Guid Id { get; set; }
 
     public string Description { get; set; }
-
     public WebSideVm WebSide { get; set; }
     public string Username { get; set; }
     public string Password { get; set; }

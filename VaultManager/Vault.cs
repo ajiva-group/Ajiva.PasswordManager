@@ -4,13 +4,14 @@ namespace VaultManager;
 
 public class Vault
 {
-    public string DbPath { get; }
+    public event Action VaultChanged;
+    public event Action<PasswordEntry, PasswordEntry> PasswordEntryChanged;
 
-    public Vault() : this("default.ajvault") { }
+    public string Name { get; }
 
-    public Vault(string dbPath)
+    public Vault(string name)
     {
-        DbPath = dbPath;
+        Name = name;
     }
 
     public Dictionary<Guid, PasswordEntry> Passwords { get; set; } = new();
@@ -19,6 +20,40 @@ public class Vault
     public Dictionary<Guid, WebSideEntry> WebSides { get; set; } = new();
     public Dictionary<Guid, FileNoteEntry> Files { get; set; } = new();
     public Dictionary<Guid, TagEntry> Tags { get; set; } = new();
+
+    public PasswordEntry Update(PasswordEntry passwordEntry)
+    {
+        var old = Passwords[passwordEntry.Id];
+        //copy vales from old to new if null
+        if (passwordEntry.Username == null)
+            passwordEntry.Username = old.Username;
+        if (passwordEntry.Password == null)
+            passwordEntry.Password = old.Password;
+        if (passwordEntry.WebSide == null)
+            passwordEntry.WebSide = old.WebSide;
+        if (passwordEntry.Notes == null)
+            passwordEntry.Notes = old.Notes;
+
+        if (passwordEntry.WebSide.Description == null)
+            passwordEntry.WebSide.Description = old.WebSide.Description;
+        if (passwordEntry.WebSide.Domain == null)
+            passwordEntry.WebSide.Domain = old.WebSide.Domain;
+
+        Passwords[passwordEntry.Id] = passwordEntry;
+        OnPasswordEntryChanged(passwordEntry, old);
+        return passwordEntry;
+    }
+
+    protected virtual void OnPasswordEntryChanged(PasswordEntry newEntry, PasswordEntry oldEntry)
+    {
+        PasswordEntryChanged?.Invoke(newEntry, oldEntry);
+        OnVaultChanged();
+    }
+
+    protected virtual void OnVaultChanged()
+    {
+        VaultChanged?.Invoke();
+    }
 }
 public class PasswordEntry
 {

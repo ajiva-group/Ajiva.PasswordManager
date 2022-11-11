@@ -1,0 +1,103 @@
+<Grid xmlns="http://schemas.microsoft.com/dotnet/2021/maui" 
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:m="clr-namespace:Ajiva.PasswordManager.Ui.Maui.ViewModels"
+             x:Class="Ajiva.PasswordManager.Ui.Maui.Views.WidgetsPanel"
+            ColumnDefinitions="1,*">
+    <Grid.Resources>
+        <DataTemplate x:Key="MetricTemplate">
+            <Frame
+                HeightRequest="154"
+                WidthRequest="154"
+                Padding="0"
+                CornerRadius="{StaticResource CornerR}"
+                HasShadow="False"
+                BackgroundColor="{AppThemeBinding Light={StaticResource LightGray}, Dark={StaticResource Background_Mid}}">
+                <Grid
+                    Margin="20"
+                    ColumnDefinitions="*"
+                    RowDefinitions="*">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer NumberOfTapsRequired="2"
+                                    Tapped="OnTapped"/>
+                    </Grid.GestureRecognizers>
+                    <Image Source="{Binding Icon}"
+                                WidthRequest="45"
+                                HeightRequest="45"
+                           Aspect="AspectFit"
+                                VerticalOptions="Start"
+                                HorizontalOptions="End"
+                                />
+
+                    <StackLayout 
+                        HorizontalOptions="Start"
+                        Spacing="0"
+                        VerticalOptions="End">
+                        <Label Text="{Binding Value}" class="LargeTitle"/>
+                        <Label Text="From" class="Subhead"/>
+                        <Label Text="{Binding WeatherStation}" class="SubContent"/>
+                    </StackLayout>
+                </Grid>
+            </Frame>
+        </DataTemplate>
+        
+        <DataTemplate x:Key="MetricBorderTemplate">
+            <Border
+                Margin="25"
+                HorizontalOptions="Start"
+                HeightRequest="154"
+                WidthRequest="154"
+                Stroke="Transparent"
+                BackgroundColor="{AppThemeBinding Light={StaticResource LightGray}, Dark={StaticResource Background_Mid}}">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="{StaticResource CornerR}"/>
+                </Border.StrokeShape>
+                <Grid
+                    Margin="20"
+                    ColumnDefinitions="*"
+                    RowDefinitions="*">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer NumberOfTapsRequired="2"
+                                    Tapped="OnTapped"/>
+                    </Grid.GestureRecognizers>
+                    <Image Source="{Binding Icon}"
+                                WidthRequest="45"
+                                HeightRequest="45"
+                                VerticalOptions="Start"
+                                HorizontalOptions="End"
+                                   BackgroundColor="Green"
+                                />
+
+                    <StackLayout HorizontalOptions="Start"
+                                        Spacing="0"
+                                        VerticalOptions="End">
+                        <Label Text="{Binding Value}" class="LargeTitle"/>
+                        <Label Text="From" class="Subhead"/>
+                        <Label Text="{Binding WeatherStation}" class="SubContent"/>
+                    </StackLayout>
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </Grid.Resources>
+
+     <CollectionView
+         Grid.Column="1"
+         Margin="5"
+         ItemTemplate="{StaticResource MetricTemplate}">
+        <CollectionView.ItemsLayout>
+            <GridItemsLayout Orientation="Vertical"
+                             Span="3"
+                             HorizontalItemSpacing="8"
+                             VerticalItemSpacing="8"/>
+        </CollectionView.ItemsLayout>
+            <CollectionView.ItemsSource>
+
+        </CollectionView.ItemsSource>
+
+            
+        </CollectionView>
+        <BoxView
+            BackgroundColor="{StaticResource Background_Mid}"
+            WidthRequest="1"
+            HorizontalOptions="Start"/>
+    
+</Grid>

@@ -4,39 +4,31 @@
              x:Class="Ajiva.PasswordManager.Ui.Maui.MainPage"
     xmlns:m="clr-namespace:Ajiva.PasswordManager.Ui.Maui.ViewModels"
     xmlns:v="clr-namespace:Ajiva.PasswordManager.Ui.Maui.Views"
-    xmlns:p="clr-namespace:Ajiva.PasswordManager.Ui.Maui.Pages">
-
+    xmlns:p="clr-namespace:Ajiva.PasswordManager.Ui.Maui.Pages"
+    xmlns:c="clr-namespace:Ajiva.PasswordManager.Ui.Maui.Converters">
+    
+    <!-- Add Converters -->
+    <ContentPage.Resources>
+        <c:StringToBooleanConverter x:Key="PasswordConverter"/>
+    </ContentPage.Resources>
+    
     <Grid>
-        <Grid RowSpacing="45" RowDefinitions="Auto, Auto, Auto" VerticalOptions="Center" HorizontalOptions="Center"
-            Padding="{OnPlatform iOS='30,60,30,30', Default='30'}">
+        <VerticalStackLayout Spacing="45" VerticalOptions="Center" HorizontalOptions="Center"  Padding="{OnPlatform iOS='30,60,30,30', Default='30'}">
+            <Label Text="Unlock Password Vault" Grid.Row="0" SemanticProperties.HeadingLevel="Level1" HorizontalOptions="Center" />
+            
+            <!-- Make visable if text is not null -->
+            <Label x:Name="Error" Text="" HorizontalOptions="Center" IsVisible="{Binding Password, Converter={StaticResource PasswordConverter}}"/>
 
-            <Label 
-                Text="Unlock Passowrd Vault"
-                Grid.Row="0"
-                SemanticProperties.HeadingLevel="Level1"
-                FontSize="Header"
-                HorizontalOptions="Center" />
+            <HorizontalStackLayout HorizontalOptions="Center">
+                <Label Text="Pick Vault" HorizontalTextAlignment="Center"></Label>
+                <VerticalStackLayout >
+                    <Picker x:Name="VaultSelect" ItemsSource="{Binding Vaults}"></Picker>
+                    <Button Text="➕" Clicked="AddVaultClick"></Button>
+                </VerticalStackLayout>
+            </HorizontalStackLayout>
 
-            <!-- get passowrd input -->
-            <Entry
-                Grid.Row="1"
-                Placeholder="Enter Password"
-                x:Name="PasswordInput"
-                IsPassword="False"
-                FontSize="Header"
-                MaxLength="64"
-                HorizontalTextAlignment="Center"
-                MaximumWidthRequest="600"/>
-
-
-            <Button 
-                Text="Unlock"
-                FontAttributes="Bold"
-                FontSize="Header" 
-                Grid.Row="3"
-                SemanticProperties.Hint="Counts the number of times you click"
-                Clicked="OnUnlockClicked"
-                HorizontalOptions="Center" />
-        </Grid>
+            <Entry Placeholder="Enter Password" x:Name="PasswordInput" IsPassword="False" MaxLength="64" HorizontalTextAlignment="Center" MaximumWidthRequest="600"/>
+            <Button Text="Unlock" FontAttributes="Bold" Clicked="OnUnlockClicked" HorizontalOptions="Center" />
+        </VerticalStackLayout>
     </Grid>
 </ContentPage>

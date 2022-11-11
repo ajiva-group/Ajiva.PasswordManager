@@ -1,15 +1,18 @@
 ﻿using Ajiva.PasswordManager.Ui.Maui.Pages;
 using Ajiva.PasswordManager.Ui.Maui.Static;
 using VaultManager.Crypto;
+using VaultManager.Providers;
 
 namespace Ajiva.PasswordManager.Ui.Maui;
 
 public partial class App : Application
 {
+    private readonly IVaultService _vaultService;
     Page _realPage;
 
-    public App()
+    public App(IVaultService vaultService, IVaultInterfaceManager vaultInterfaceManager)
     {
+        _vaultService = vaultService;
         InitializeComponent();
 
         if (DeviceInfo.Idiom == DeviceIdiom.Phone)
@@ -17,16 +20,14 @@ public partial class App : Application
 
         _realPage = MainPage;
 
-        var mainPage = new MainPage();
+        var mainPage = new MainPage(vaultInterfaceManager);
         mainPage.OnLogin += MainPage_OnLogin;
         MainPage = mainPage;
-
-        Routing.RegisterRoute("settings", typeof(SettingsPage));
     }
 
-    private void MainPage_OnLogin(object sender, string e)
+    private void MainPage_OnLogin(string vaultName, string password)
     {
-        StaticData.Load(e);
+        _vaultService.Load(vaultName, password);
 
         MainPage = _realPage;
     }

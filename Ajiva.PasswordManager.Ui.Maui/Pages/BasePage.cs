@@ -4,88 +4,144 @@ using System.Diagnostics;
 
 namespace Ajiva.PasswordManager.Ui.Maui.Pages;
 
-public class BasePage<T, TV> : ContentPage where T : PageDescription<TV>
+public abstract class BasePage<T, TV> : ContentPage where T : PageDescription<TV> where TV : class
 {
     private readonly T _description;
     private readonly SearchBar _searchBar;
     private readonly Grid _mainContent;
-    private readonly StackLayout _detailsView;
+    private readonly VerticalStackLayout _detailsView;
     private readonly CollectionView _collectionView;
+    private readonly HorizontalStackLayout _options;
+    private readonly Button _edit;
+    private readonly Button _cancel;
+    private readonly Button _save;
+    private readonly VerticalStackLayout _itemListContainer;
 
     public BasePage(T description)
     {
         _description = description;
+        Title = description.Name;
 
-        _mainContent = new Grid
-        {
-            ColumnDefinitions =
-            {
-                new ColumnDefinition { Width = new GridLength(40, GridUnitType.Star) },
-                new ColumnDefinition { Width = new GridLength(60, GridUnitType.Star) },
-            },
-        };
-        _searchBar = new SearchBar
-        {
+        _searchBar = new SearchBar {
             Placeholder = $"Search {description.Name}...",
             PlaceholderColor = Colors.Gray,
         };
-
-        var itemListContainer = new VerticalStackLayout
-        {
-            Children =
-            {
+        _searchBar.TextChanged += PerformSearch;
+        _itemListContainer = new VerticalStackLayout {
+            Children = {
                 _searchBar,
-                (_collectionView = new CollectionView
-                {
-                    ItemsSource = _description.SearchAction.Invoke(null).ToList(),
+                (_collectionView = new CollectionView {
                     ItemTemplate = description.ItemTemplate,
                     SelectionMode = SelectionMode.Single,
-                    SelectionChangedCommand = new Command<TV>(ItemSelected),
+                    SelectionChangedCommand = new Command(ItemSelected),
                 })
             }
         };
-        _mainContent.Add(itemListContainer, 0, 0);
-        _mainContent.Add(_detailsView = new StackLayout
+
+
+        _cancel = new Button { HorizontalOptions = LayoutOptions.End, Text = "Cancel", TextColor = Colors.Gray };
+        _cancel.Clicked += (_, _) =>
         {
-            Children =
-            {
-                new HorizontalStackLayout
-                {
-                    Children = { new Button { HorizontalOptions = LayoutOptions.End, Text = "Edit", TextColor = Colors.Gray } },
-                },
+            _options.Children.Remove(_cancel);
+            _options.Children.Insert(0, _edit);
+            _description.DetailView.SetEdit(false);
+        };
+        _edit = new Button { HorizontalOptions = LayoutOptions.End, Text = "Edit", TextColor = Colors.Gray };
+        _edit.Clicked += (_, _) =>
+        {
+            _options.Children.Remove(_edit);
+            _options.Children.Insert(0, _cancel);
+            _description.DetailView.SetEdit(true);
+        };
+        _save = new Button { HorizontalOptions = LayoutOptions.End, Text = "Save", TextColor = Colors.Gray };
+        _save.Clicked += (_, _) =>
+        {
+            _description.DetailView.Save();
+            _cancel.SendClicked();
+        };
+
+        _detailsView = new VerticalStackLayout {
+            Children = {
+                (_options = new HorizontalStackLayout {
+                    Children = {
+                        _edit,
+                        _save,
+                    },
+                }),
                 description.DetailView
             }
-        }, 1, 0);
-
-        Content = new StackLayout
+        };
+        
+        if (DeviceInfo.Idiom == DeviceIdiom.Phone)
         {
-            //HeightRequest = Height,
-            Children =
+            _mainContent = new Grid {
+                _itemListContainer
+            };
+            var back  = new Button { HorizontalOptions = LayoutOptions.End, Text = "🔙", TextColor = Colors.Gray };
+            back.Clicked += (_, _) =>
             {
-                new Label { Text = "Welcome to .NET MAUI!" },
+                _mainContent.Children.Clear();
+                _mainContent.Children.Add(_itemListContainer);
+            };
+            _options.Children.Add(back);
+        }
+        else
+        {
+            _mainContent = new Grid {
+                ColumnDefinitions = {
+                    new ColumnDefinition { Width = new GridLength(40, GridUnitType.Star) },
+                    new ColumnDefinition { Width = new GridLength(60, GridUnitType.Star) },
+                },
+            };
+            _mainContent.Add(_itemListContainer, 0, 0);
+            _mainContent.Add(_detailsView, 1, 0);
+        }
+
+        Content = new StackLayout {
+            //HeightRequest = Height,
+            Children = {
+                new Label { Text = Title, },
                 _mainContent
             }
         };
-        _searchBar.TextChanged += PerformSearch;
+    }
+
+    /// <inheritdoc />
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        PerformSearch(null);
     }
 
     private void PerformSearch(object? sender, TextChangedEventArgs e)
     {
-        var items = _description.SearchAction.Invoke(e.NewTextValue).ToList();
-        Debug.WriteLine(this, $"Results for {e.NewTextValue}: {items.Count}");
+        PerformSearch(e.NewTextValue);
+    }
+
+    private void PerformSearch(string? search)
+    {
+        var items = SearchAction(search).ToList();
+        Debug.WriteLine(this, $"Results for {search}: {items.Count}");
         SearchResults = items;
     }
 
-    private void ItemSelected(TV obj)
+    protected abstract IEnumerable<TV> SearchAction(string? search);
+
+    protected void ItemsChanged()
     {
-        _description.DetailView.SetDetail(obj);
+        PerformSearch(_searchBar.Text);
     }
 
-    /*private void SearchBar_SearchButtonPressed(object obj)
+    private void ItemSelected()
     {
-        SearchResults = _description.SearchAction.Invoke(_searchBar.Text);
-    }*/
-
+        if (DeviceInfo.Idiom == DeviceIdiom.Phone)
+        {
+            _mainContent.Children.Clear();
+            _mainContent.Children.Add(_detailsView);
+        }
+        _description.DetailView.SetDetail(_collectionView.SelectedItem as TV);
+    }
+    
     public IEnumerable<TV> SearchResults
     {
         set => _collectionView.ItemsSource = value;

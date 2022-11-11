@@ -79,4 +79,16 @@ internal class MauiStorageProvider : IStorageProvider
         writer.Write(data);
         writer.Close();
     }
+
+    /// <inheritdoc />
+    public string[] ListFiles(string directory)
+    {
+        return _storeStorage.GetFileNames(directory + "\\*");
+    }
+
+    /// <inheritdoc />
+    public string[] ListDirectories(string directory)
+    {
+        return _storeStorage.GetDirectoryNames(directory + "\\*");
+    }
 }

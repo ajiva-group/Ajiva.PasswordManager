@@ -1,53 +1,41 @@
-﻿using VaultManager.Crypto;
-using VaultManager.Providers;
+﻿using VaultManager.Providers;
 
 namespace VaultManager;
 
 public class VaultManager
 {
-    private readonly string _vaultFile;
-    private readonly IEncryptionProvider _encryptionProvider;
+    private string? _vaultName;
     private readonly IKeyManager _keyManager;
-    private readonly IStorageProvider _storageProvider;
-    private readonly IValueSerializationManager _serializationManager;
+    private readonly IVaultLoader _vaultLoader;
 
-    public VaultManager(string vaultName, IEncryptionProvider encryptionProvider, IKeyManager keyManager, IStorageProvider storageProvider, IValueSerializationManager serializationManager)
+    public VaultManager(
+        IKeyManager keyManager,
+        IVaultLoader vaultLoader)
     {
-        _vaultFile = Path.Combine(VaultDir, vaultName + ".ajvault");
-        _encryptionProvider = encryptionProvider;
         _keyManager = keyManager;
-        _storageProvider = storageProvider;
-        _serializationManager = serializationManager;
+        _vaultLoader = vaultLoader;
     }
 
-    private void EnsureDirectoryExist()
+    public void SetVaultName(string vaultName)
     {
-        _storageProvider.CreateDirectory(VaultDir);
+        _vaultName = vaultName;
     }
-
-    public string VaultDir { get; set; } = "Vaults";
 
     public void LoadVault()
     {
-        EnsureDirectoryExist();
-        var encData = _storageProvider.ReadAllBytes(_vaultFile);
-        _keyManager.LoadKeys();
-        var data = _encryptionProvider.DecryptSymmetric(encData);
-        Vault = _serializationManager.DeserializeVault(data);
-        _keyManager.SaveKeysAndClear();
+        if (_vaultName is null) throw new VaultNotFoundException(_vaultName);
+        Vault = _vaultLoader.LoadVault(_vaultName);
 
         while (Vault.Passwords.Count < 10)
         {
             var id = Guid.NewGuid();
-            Vault.Passwords.Add(id, new PasswordEntry
-            {
+            Vault.Passwords.Add(id, new PasswordEntry {
                 Description = "Test Description " + id,
                 Password = "PW" + id,
                 Username = "Test Username",
                 Notes = "Test Notes",
                 Id = id,
-                WebSide = new WebSideEntry
-                {
+                WebSide = new WebSideEntry {
                     Description = "Test Description WebSide for " + id,
                     Domain = new Uri("https://www.google.com"),
                     Id = Guid.NewGuid(),
@@ -60,20 +48,21 @@ public class VaultManager
 
     public void SaveVault()
     {
-        var data = _serializationManager.SerializeVault(Vault);
-        _keyManager.LoadKeys();
-        var encData = _encryptionProvider.EncryptSymmetric(data);
-        _storageProvider.WriteAllBytes(_vaultFile, encData);
-        _keyManager.SaveKeysAndClear();
+        _vaultLoader.SaveVault(Vault);
     }
 
     public Vault Vault { get; private set; }
 
+    public PasswordEntry Update(PasswordEntry passwordEntry)
+    {
+        var res = Vault.Update(passwordEntry);
+        SaveVault();
+        return res;
+    }
+
     public void CreateVault()
     {
-        Vault = new Vault();
-        _keyManager.CreateKey();
-        SaveVault();
-        LoadVault();
+        if (_vaultName is null) throw new VaultNotFoundException(_vaultName);
+        Vault = _vaultLoader.CreateVault(_vaultName);
     }
 }

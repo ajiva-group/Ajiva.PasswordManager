@@ -57,15 +57,27 @@
             <FlyoutItem Title="Map" Icon="tab_map.png">
                 <ShellContent ContentTemplate="{DataTemplate page:TagsPage}"/>
             </FlyoutItem>
-            <FlyoutItem Route="settings" FlyoutItemIsVisible="False" >
-                <ShellContent ContentTemplate="{DataTemplate page:SettingsPage}"/>
-            </FlyoutItem>
 
             <!-- Phone -->
             <TabBar x:Name="PhoneTabs">
                 <!-- TODO -->
-                <Tab Title="Settings" Icon="tab_settings.png">
-                    <ShellContent ContentTemplate="{DataTemplate page:SettingsPage}"/>
+                <Tab Title="Home" Icon="tab_home.png">
+                    <ShellContent ContentTemplate="{DataTemplate page:PasswordPageBased}"/>
+                </Tab>
+                <Tab Title="Favorites" Icon="tab_favorites.png">
+                    <ShellContent ContentTemplate="{DataTemplate page:TwoFactorPage}"/>
+                </Tab>
+                <Tab Title="Map" Icon="tab_map.png">
+                    <ShellContent ContentTemplate="{DataTemplate page:IdentitiesPage}"/>
+                </Tab>
+                <Tab Title="Map" Icon="tab_map.png">
+                    <ShellContent ContentTemplate="{DataTemplate page:FilesPage}"/>
+                </Tab>
+                <Tab Title="Map" Icon="tab_map.png">
+                    <ShellContent ContentTemplate="{DataTemplate page:WebSidePage}"/>
+                </Tab>
+                <Tab Title="Map" Icon="tab_map.png">
+                    <ShellContent ContentTemplate="{DataTemplate page:TagsPage}"/>
                 </Tab>
             </TabBar>
 
